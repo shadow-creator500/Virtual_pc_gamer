@@ -1,0 +1,83 @@
+
+name: Virtual PC - Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: virtual-pc-deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Construir PC Virtual
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Verificar arquivo principal
+        run: |
+          echo "Verificando PC Virtual..."
+          if [ ! -f index.html ]; then
+            echo "Erro: index.html não encontrado!"
+            exit 1
+          fi
+          echo "Arquivo principal encontrado!"
+
+      - name: Verificar estrutura
+        run: |
+          echo "Analisando arquivos..."
+          ls -la
+          echo "Verificação concluída!"
+
+      - name: Preparar publicação
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    name: Publicar PC Virtual
+    runs-on: ubuntu-latest
+    needs: build
+
+    if: github.event_name != 'pull_request'
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Iniciar publicação
+        run: echo "Publicando Virtual PC..."
+
+      - name: Enviar para GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Finalizar publicação
+        run: |
+          echo "PC Virtual publicado!"
+          echo "Deploy concluído com sucesso!"
+
+      - name: Mostrar informações
+        run: |
+          echo "Projeto: Virtual PC"
+          echo "Plataforma: GitHub Pages"
+          echo "Status: Concluído"
+          
